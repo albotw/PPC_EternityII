@@ -1,0 +1,58 @@
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{fullpage}
+\usepackage{color}
+\usepackage{svg}
+
+\title{Projet d'info 4A}
+\author{Wassim DJELLAT - Yann TROU}
+\date{Avril 2020}
+\begin{document}
+
+\maketitle
+\section*{Introduction}
+
+\subsection*{Variante choisie}
+Notre projet correspond à la version complexe, sans IA, avec la taille de tableau variable et la solution de départ aléatoire (7 ou I d'après les documents que vous avez envoyé).
+ 
+\section*{I | Mécaniques principales}
+\subsection*{1) Structures de données}
+Afin de modéliser le tableau de jeu contenant toutes les pièces, nous avons décidé d'utiliser la structure ci-contre : 
+\\
+\\
+\begin{center}
+\includesvg[scale = 2]{Piece.svg} 
+\end{center}
+\\
+\\
+pour une pièce. 
+Nous ne nous rappelons plus pourquoi avoir utilisé la notation géographique au lieu d'une notation plus lisible et évidemment nous ne le réalisons que pendant la rédaction du rapport.. Le tableau qui les contient, lui, est un tableau à une dimension car nous trouvions ceci plus facile qu'un tableau à deux dimensions.
+On utilise la formule ci dessous
+\[ x + cote * y = index \]
+pour passer facilement de coordonnées 2D à coordonnées 1D.
+
+\subsection*{2) Boucle de gameplay}
+\begin{center}
+\includegraphics[scale = 0.59]{Graphe.jpg}
+\end{center}
+
+Le détail des fonctions est dans le code source joint. Ce graphe indique juste où sont appelées les fonctions principales, pas la structure des fonctions. La fonction initDMM() sert à initialiser la gestion de la mémoire dynamique, sinon fiez vous au nom pour l'utilité de la fonction.
+\section*{II | Utilitaires}
+\subsection*{Gestion de la mémoire dynamique}
+Suite à des problèmes de fuite de mémoire dans formatChar(), et comme il y a avait un exercice similaire en TD, nous avons décidé de faire un système de gestion de la mémoire dynamique.
+Ainsi, nous avons une structure appelée container :
+\\
+\begin{center}
+\includegraphics[scale = 0.59]{Tas.jpg} 
+\end{center}
+\\
+\\
+et un tableau index permettant l'indexation de tous les blocs mémoires. l'objectif final est de permettre la création et suppression de blocs mémoire n'importe ou dans le code sans problème.
+
+\subsection*{Formatage du texte et affichage}
+Pour l'affichage, comme nous trouvions l'environnement du terminal fort austère, nous avons voulu mettre un peu de couleur grâce aux codes ANSI.
+\end{document}

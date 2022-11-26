@@ -44,6 +44,7 @@ impl Plateau {
             maxColor: maxColor
         }
     }
+}
 
     pub fn generate(&self) {
         for i in 0..self.cote {
