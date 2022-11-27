@@ -1,3 +1,4 @@
+use std::error::Error;
 use rand::Rng;
 
 fn main() {
@@ -34,24 +35,45 @@ impl Piece {
     }
 }
 
+impl Copy for Piece {}
+impl Clone for Piece {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
 struct Plateau {
     pieces: Vec<Piece>,
     cote: u8,
-    maxColor: u8,
+    max_color: u8,
 }
 
 impl Plateau {
-    pub fn new(cote: u8, maxColor: u8) -> Plateau {
+    pub fn new(cote: u8, max_color: u8) -> Plateau {
         Plateau {
             pieces: Vec::new(),
             cote,
-            maxColor,
+            max_color,
         }
     }
 
     pub fn generate(&mut self) {
-        for i in 0..self.cote {
-            for j in 0..self.cote {
+        //phase de remplissage pour éviter les erreurs oob
+        self.pieces.fill(
+            Piece {
+                N: self.max_color + 1,
+                S: self.max_color + 1,
+                E: self.max_color + 1,
+                W: self.max_color + 1
+            }
+        );
+
+        for _i in 0..self.cote {
+            for _j in 0..self.cote {
+                let i = _i as i8;
+                let j = _j as i8;
+                let mut p : &Piece = self.get_at(i, j);
+                p.N = self.get_face_from_context(i, j - 1, 'N')
                 let p = Piece {
                     N: self.get_face_from_context(i, j - 1, 'N'),
                     S: self.get_face_from_context(i, j + 1, 'S'),
@@ -100,8 +122,10 @@ impl Plateau {
 
     pub fn check_conflicts(&self) -> u8 {
         let mut conflicts = 0;
-        for i in 0..self.cote{
-            for j in 0..self.cote {
+        for _i in 0..self.cote{
+            for _j in 0..self.cote {
+                let i = _i as i8;
+                let j = _j as i8;
                 let p : &Piece = self.get_at(i, j);
                 if self.get_at(i, j - 1).E != p.W {
                     conflicts += 1;
@@ -121,21 +145,24 @@ impl Plateau {
         return conflicts / 2;
     }
 
-    pub fn get_at(&self, mut x: u8, mut y: u8) -> &Piece {
+    pub fn get_at(&self, mut x: i8, mut y: i8) -> &Piece {
+        // prend en compte la liaison entre les bords opposés.
         if x < 0 {
-            x = self.cote - 1;
+            x = (self.cote - 1) as i8;
         }
-        if x > self.cote - 1 {
+        if x > (self.cote - 1) as i8 {
             x = 0;
         }
         if y < 0 {
-            y = self.cote - 1;
+            y = (self.cote - 1) as i8;
         }
-        if y > self.cote - 1 {
+        if y > (self.cote - 1) as i8 {
             y = 0;
         }
 
-        return &self.pieces[usize::from(x + (self.cote * y))];
+        //cast en unsigned pour pouvoir utiliser usize
+        let u8_position : u8 = (x + ((self.cote as i8) * y)) as u8;
+        return &self.pieces[usize::from(u8_position)];
     }
 
     pub fn rotate_at(&mut self, x: u8, y: u8) {
@@ -143,8 +170,8 @@ impl Plateau {
         self.pieces[position].rotate90();
     }
 
-    fn get_face_from_context(&self, x: u8, y: u8, face: char) -> u8 {
-        let mut out = self.maxColor + 1;
+    fn get_face_from_context(&self, x: i8, y: i8, face: char) -> u8 {
+        let mut out = self.max_color + 1;
         if face == 'N' {
             out = self.get_at(x, y).S;
         }
@@ -158,9 +185,9 @@ impl Plateau {
             out = self.get_at(x, y).E;
         }
 
-        if out == self.maxColor + 1 {
+        if out == self.max_color + 1 {
             let mut rng = rand::thread_rng();
-            out = rng.gen_range(0..(self.maxColor + 1));
+            out = rng.gen_range(0..(self.max_color + 1));
         }
 
         return out;
