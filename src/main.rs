@@ -1,7 +1,11 @@
 use rand::Rng;
 
 fn main() {
-    println!("Hello, world!");
+    let mut plateau : Plateau = Plateau::new(5, 3);
+    plateau.generate();
+    plateau.shuffle();
+    let conflicts = plateau.check_conflicts();
+    println!("Found {conflicts} conflicts in array");
 }
 
 struct Piece {
@@ -72,8 +76,7 @@ impl Plateau {
             let action = rng.gen_range(0..2);
 
             if action == 0 {
-                let mut to_rotate = self.get_at(x, y);
-                to_rotate.rotate90();
+                self.rotate_at(x, y);
                 rotations += 1;
             }
             else if action == 1 {
@@ -133,6 +136,11 @@ impl Plateau {
         }
 
         return &self.pieces[usize::from(x + (self.cote * y))];
+    }
+
+    pub fn rotate_at(&mut self, x: u8, y: u8) {
+        let position = usize::from(x + (self.cote * y));
+        self.pieces[position].rotate90();
     }
 
     fn get_face_from_context(&self, x: u8, y: u8, face: char) -> u8 {
