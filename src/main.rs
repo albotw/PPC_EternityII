@@ -1,4 +1,6 @@
-use std::error::Error;
+use std::fmt::format;
+use color_print::cformat;
+use color_print::cstr;
 use rand::Rng;
 
 fn main() {
@@ -9,6 +11,7 @@ fn main() {
     println!("Found {conflicts} conflicts in array");
 }
 
+#[derive(Debug, Clone, Copy)]
 struct Piece {
     N: u8,
     S: u8,
@@ -26,19 +29,21 @@ impl Piece {
         }
     }
 
+    pub fn from_max_color(max_color: u8) -> Piece {
+        Piece{
+            N: max_color,
+            S: max_color,
+            E: max_color,
+            W: max_color
+        }
+    }
+
     pub fn rotate90(&mut self) {
         let tmp = self.N;
         self.N = self.E;
         self.E = self.S;
         self.S = self.W;
         self.W = tmp;
-    }
-}
-
-impl Copy for Piece {}
-impl Clone for Piece {
-    fn clone(&self) -> Self {
-        *self
     }
 }
 
@@ -51,7 +56,7 @@ struct Plateau {
 impl Plateau {
     pub fn new(cote: u8, max_color: u8) -> Plateau {
         Plateau {
-            pieces: Vec::new(),
+            pieces: vec![Piece::from_max_color(max_color); usize::from(cote * cote)],
             cote,
             max_color,
         }
@@ -59,28 +64,23 @@ impl Plateau {
 
     pub fn generate(&mut self) {
         //phase de remplissage pour éviter les erreurs oob
-        self.pieces.fill(
-            Piece {
-                N: self.max_color + 1,
-                S: self.max_color + 1,
-                E: self.max_color + 1,
-                W: self.max_color + 1
-            }
-        );
+        let capa = self.pieces.capacity().to_string();
+        println!("{capa}");
+
+        self.pieces.fill(Piece::from_max_color(self.max_color));
+
+        let size = self.pieces.len().to_string();
+        println!("{size}");
 
         for _i in 0..self.cote {
             for _j in 0..self.cote {
                 let i = _i as i8;
                 let j = _j as i8;
-                let mut p : &Piece = self.get_at(i, j);
-                p.N = self.get_face_from_context(i, j - 1, 'N')
-                let p = Piece {
-                    N: self.get_face_from_context(i, j - 1, 'N'),
-                    S: self.get_face_from_context(i, j + 1, 'S'),
-                    E: self.get_face_from_context(i - 1, j, 'E'),
-                    W: self.get_face_from_context(i + 1, j, 'W'),
-                };
-                self.pieces.push(p);
+                let index = self.to1d(i, j);
+                self.pieces[index].N = self.get_face_from_context(i, j - 1, 'N');
+                self.pieces[index].S = self.get_face_from_context(i, j + 1, 'S');
+                self.pieces[index].E = self.get_face_from_context(i - 1, j, 'E');
+                self.pieces[index].W = self.get_face_from_context(i + 1, j, 'W');
             }
         }
     }
@@ -92,8 +92,8 @@ impl Plateau {
         let mut swaps = 0;
 
         for i in 0..moves {
-            let x = rng.gen_range(0..(self.cote + 1));
-            let y = rng.gen_range(0..(self.cote + 1));
+            let x = rng.gen_range(0..self.cote);
+            let y = rng.gen_range(0..self.cote);
 
             let action = rng.gen_range(0..2);
 
@@ -102,8 +102,8 @@ impl Plateau {
                 rotations += 1;
             }
             else if action == 1 {
-                let x2 = rng.gen_range(0..(self.cote + 1));
-                let y2 = rng.gen_range(0..(self.cote + 1));
+                let x2 = rng.gen_range(0..self.cote);
+                let y2 = rng.gen_range(0..self.cote);
 
                 self.swap(x, y, x2, y2);
                 swaps += 1;
@@ -126,17 +126,17 @@ impl Plateau {
             for _j in 0..self.cote {
                 let i = _i as i8;
                 let j = _j as i8;
-                let p : &Piece = self.get_at(i, j);
-                if self.get_at(i, j - 1).E != p.W {
+                let p : &Piece = self.get_at(j, i);
+                if self.get_at( j - 1, i).E != p.W {
                     conflicts += 1;
                 }
-                if self.get_at(i - 1, j).S != p.N {
+                if self.get_at(j, i - 1).S != p.N {
                     conflicts += 1;
                 }
-                if self.get_at(i, j + 1).W != p.E {
+                if self.get_at(j + 1, i).W != p.E {
                     conflicts += 1;
                 }
-                if self.get_at(i + 1, j).N != p.S {
+                if self.get_at(j, i + 1).N != p.S {
                     conflicts += 1;
                 }
             }
@@ -146,23 +146,27 @@ impl Plateau {
     }
 
     pub fn get_at(&self, mut x: i8, mut y: i8) -> &Piece {
-        // prend en compte la liaison entre les bords opposés.
+        let u8_position = self.to1d(x, y);
+        return &self.pieces[usize::from(u8_position)];
+    }
+
+    pub fn to1d(&self, mut x : i8, mut y : i8) -> usize {
+        let bound = (self.cote - 1) as i8;
         if x < 0 {
-            x = (self.cote - 1) as i8;
+            x = bound;
         }
-        if x > (self.cote - 1) as i8 {
+        if x > bound {
             x = 0;
         }
         if y < 0 {
-            y = (self.cote - 1) as i8;
+            y = bound;
         }
-        if y > (self.cote - 1) as i8 {
+        if (y > bound) {
             y = 0;
         }
 
-        //cast en unsigned pour pouvoir utiliser usize
-        let u8_position : u8 = (x + ((self.cote as i8) * y)) as u8;
-        return &self.pieces[usize::from(u8_position)];
+        let u8_position : u8 =  (x + (bound * y)) as u8;
+        return usize::from(u8_position);
     }
 
     pub fn rotate_at(&mut self, x: u8, y: u8) {
@@ -190,6 +194,14 @@ impl Plateau {
             out = rng.gen_range(0..(self.max_color + 1));
         }
 
+        return out;
+    }
+
+    fn format_face(color: u8) {
+        let color_table = ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "bright-red", "bright-green", "bright-yellow"];
+        let index = usize::from(color);
+        let string = format!("<{}>{}</{}>", color_table[index], color, color_table[index]);
+        let out = cstr!(string);
         return out;
     }
 }
