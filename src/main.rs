@@ -1,49 +1,48 @@
-use std::fmt::format;
-use color_print::cformat;
-use color_print::cstr;
 use rand::Rng;
 
 fn main() {
     let mut plateau : Plateau = Plateau::new(5, 3);
     plateau.generate();
+    plateau.print_tab();
     plateau.shuffle();
+    plateau.print_tab();
     let conflicts = plateau.check_conflicts();
     println!("Found {conflicts} conflicts in array");
 }
 
 #[derive(Debug, Clone, Copy)]
 struct Piece {
-    N: u8,
-    S: u8,
-    E: u8,
-    W: u8,
+    n: u8,
+    s: u8,
+    e: u8,
+    w: u8,
 }
 
 impl Piece {
     pub fn new() -> Piece {
         Piece {
-            N: 0,
-            S: 0,
-            E: 0,
-            W: 0,
+            n: 0,
+            s: 0,
+            e: 0,
+            w: 0,
         }
     }
 
     pub fn from_max_color(max_color: u8) -> Piece {
         Piece{
-            N: max_color,
-            S: max_color,
-            E: max_color,
-            W: max_color
+            n: max_color,
+            s: max_color,
+            e: max_color,
+            w: max_color
         }
     }
 
     pub fn rotate90(&mut self) {
-        let tmp = self.N;
-        self.N = self.E;
-        self.E = self.S;
-        self.S = self.W;
-        self.W = tmp;
+        let tmp = self.n;
+        self.n = self.e;
+        self.e = self.s;
+        self.s = self.w;
+        self.w = tmp;
     }
 }
 
@@ -64,23 +63,18 @@ impl Plateau {
 
     pub fn generate(&mut self) {
         //phase de remplissage pour éviter les erreurs oob
-        let capa = self.pieces.capacity().to_string();
-        println!("{capa}");
-
-        self.pieces.fill(Piece::from_max_color(self.max_color));
-
-        let size = self.pieces.len().to_string();
-        println!("{size}");
+        // IMPORTANT: mettre à self.color + 1 pour pouvoir mélanger le tableau.
+        self.pieces.fill(Piece::from_max_color(self.max_color + 1));
 
         for _i in 0..self.cote {
             for _j in 0..self.cote {
                 let i = _i as i8;
                 let j = _j as i8;
                 let index = self.to1d(i, j);
-                self.pieces[index].N = self.get_face_from_context(i, j - 1, 'N');
-                self.pieces[index].S = self.get_face_from_context(i, j + 1, 'S');
-                self.pieces[index].E = self.get_face_from_context(i - 1, j, 'E');
-                self.pieces[index].W = self.get_face_from_context(i + 1, j, 'W');
+                self.pieces[index].n = self.get_face_from_context(i, j - 1, 'N');
+                self.pieces[index].s = self.get_face_from_context(i, j + 1, 'S');
+                self.pieces[index].e = self.get_face_from_context(i - 1, j, 'E');
+                self.pieces[index].w = self.get_face_from_context(i + 1, j, 'W');
             }
         }
     }
@@ -91,7 +85,7 @@ impl Plateau {
         let mut rotations = 0;
         let mut swaps = 0;
 
-        for i in 0..moves {
+        for _i in 0..moves {
             let x = rng.gen_range(0..self.cote);
             let y = rng.gen_range(0..self.cote);
 
@@ -127,16 +121,16 @@ impl Plateau {
                 let i = _i as i8;
                 let j = _j as i8;
                 let p : &Piece = self.get_at(j, i);
-                if self.get_at( j - 1, i).E != p.W {
+                if self.get_at( j - 1, i).e != p.w {
                     conflicts += 1;
                 }
-                if self.get_at(j, i - 1).S != p.N {
+                if self.get_at(j, i - 1).s != p.n {
                     conflicts += 1;
                 }
-                if self.get_at(j + 1, i).W != p.E {
+                if self.get_at(j + 1, i).w != p.e {
                     conflicts += 1;
                 }
-                if self.get_at(j, i + 1).N != p.S {
+                if self.get_at(j, i + 1).n != p.s {
                     conflicts += 1;
                 }
             }
@@ -145,7 +139,7 @@ impl Plateau {
         return conflicts / 2;
     }
 
-    pub fn get_at(&self, mut x: i8, mut y: i8) -> &Piece {
+    pub fn get_at(&self, x: i8, y: i8) -> &Piece {
         let u8_position = self.to1d(x, y);
         return &self.pieces[usize::from(u8_position)];
     }
@@ -161,7 +155,7 @@ impl Plateau {
         if y < 0 {
             y = bound;
         }
-        if (y > bound) {
+        if y > bound {
             y = 0;
         }
 
@@ -177,31 +171,41 @@ impl Plateau {
     fn get_face_from_context(&self, x: i8, y: i8, face: char) -> u8 {
         let mut out = self.max_color + 1;
         if face == 'N' {
-            out = self.get_at(x, y).S;
+            out = self.get_at(x, y).s;
         }
         if face == 'S' {
-            out = self.get_at(x, y).N;
+            out = self.get_at(x, y).n;
         }
         if face == 'E' {
-            out = self.get_at(x, y).W;
+            out = self.get_at(x, y).w;
         }
         if face == 'W' {
-            out = self.get_at(x, y).E;
+            out = self.get_at(x, y).e;
         }
 
         if out == self.max_color + 1 {
             let mut rng = rand::thread_rng();
             out = rng.gen_range(0..(self.max_color + 1));
         }
-
+        println!("{}", out);
         return out;
     }
 
-    fn format_face(color: u8) {
-        let color_table = ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "bright-red", "bright-green", "bright-yellow"];
-        let index = usize::from(color);
-        let string = format!("<{}>{}</{}>", color_table[index], color, color_table[index]);
-        let out = cstr!(string);
-        return out;
+    pub fn print_tab(&self) {
+        for i in 0..self.cote {
+            let mut top = String::new();
+            let mut mid = String::new();
+            let mut bot = String::new();
+            for j in 0..self.cote {
+                let p : &Piece = self.get_at(i as i8, j as i8);
+                top += &*format!(" {} ", p.n);
+                mid += &*format!("{}#{}", p.w, p.e);
+                bot += &*format!(" {} ", p.s);
+            }
+
+            println!("{}", top);
+            println!("{}", mid);
+            println!("{}", bot);
+        }
     }
 }

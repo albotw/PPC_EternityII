@@ -14,20 +14,20 @@ A faire:
 
 * #### mapping 2D / 1D
 
-  * i = x + width * y;
-  * x = i % width;
-  * y = i / width;
+  * _i = x + width * y;
+  * x = _i % width;
+  * y = _i / width;
 
 * ### mapping 3D / 1D
 
-  * i = x + width * y + width * height * z;
-  * x = i % width;
-  * y = (i / width) % height;
-  * z = i / (width / height);
+  * _i = x + width * y + width * height * z;
+  * x = _i % width;
+  * y = (_i / width) % height;
+  * z = _i / (width / height);
 
-  N
-W # E
-  S
+  n
+w # e
+  s
 
   B    A    C    D  
 A # CC # DD # BB # A
