@@ -43,7 +43,8 @@ impl plateau {
         }
     }
 
-    pub fn shuffle(&mut self) {
+    //mode permet d'avoir des swaps
+    pub fn shuffle(&mut self, mode : bool) {
         let mut rng = rand::thread_rng();
         let moves = rng.gen_range(5..51);
         let mut rotations = 0;
@@ -59,7 +60,7 @@ impl plateau {
                 self.rotate_at(x, y);
                 rotations += 1;
             }
-            else if action == 1 {
+            else if action == 1 && mode == true{
                 let x2 = rng.gen_range(0..self.cote);
                 let y2 = rng.gen_range(0..self.cote);
 

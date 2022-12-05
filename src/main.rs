@@ -9,7 +9,7 @@ fn main() {
     let mut plateau = plateau::new(5, 3);
     plateau.generate();
     plateau.print_tab();
-    plateau.shuffle();
+    plateau.shuffle(false);
     plateau.print_tab();
     let conflicts = plateau.check_conflicts();
     println!("Found {conflicts} conflicts in array");
@@ -24,7 +24,8 @@ fn RLS(mut plateau: plateau) {
         let conflicts = plateau.check_conflicts();
         println!("##### CYCLE {i} #####");
         println!("{conflicts} conflicts remaining");
-        let rand_move = get_random_move(&plateau);
+        let rand_move = get_random_move(&plateau, false);
+        println!("[RLS] move generated: {}", rand_move.move_type);
         let mut clone = plateau.clone();
         apply_random_move(&mut clone, rand_move);
         let c_cost = get_cost(&plateau);
@@ -34,9 +35,10 @@ fn RLS(mut plateau: plateau) {
             println!("[RLS] found better configuration");
         }
         else {
-            let transition_factor = transition_factor(c_cost, v_cost, 0.1);
+            let transition_factor = transition_factor(c_cost, v_cost, 1.0);
             let transition_threshold = transition_threshold();
             println!("[RLS] Transition factor: {transition_factor}");
+            println!("[RLS] Transition threshold: {transition_threshold}");
             if transition_threshold <= transition_factor{
                 plateau = clone;
                 println!("[RLS] transition factor found better configuration");
@@ -56,12 +58,13 @@ struct rls_move {
     move_type: bool, // true -> rotation, false -> swap
 }
 
-fn get_random_move(plateau : &plateau) -> rls_move {
+//mode permet d'avoir des swaps.
+fn get_random_move(plateau : &plateau, mode : bool) -> rls_move {
     let mut rng = rand::thread_rng();
-    let move_type = rng.gen_bool(0.5);
+    let move_type = rng.gen_bool(if mode == true {0.5} else {1.0});
     let mut x2 = Option::None;
     let mut y2 = Option::None;
-    if move_type == false {
+    if move_type == false && mode == true {
         x2 = Option::from(rng.gen_range(0..plateau.get_cote()));
         y2 = Option::from(rng.gen_range(0..plateau.get_cote()));
     }
