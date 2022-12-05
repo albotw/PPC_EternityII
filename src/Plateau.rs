@@ -1,6 +1,7 @@
 use rand::Rng;
 use crate::Piece::piece;
 
+#[derive(Debug, Clone)]
 pub struct plateau {
     pieces: Vec<piece>,
     cote: u8,
@@ -16,10 +17,18 @@ impl plateau {
         }
     }
 
+    pub fn get_cote(&self) -> u8 {
+        self.cote
+    }
+
+    pub fn get_max_color(&self) -> u8 {
+        self.max_color
+    }
+
     pub fn generate(&mut self) {
         //phase de remplissage pour éviter les erreurs oob
         // IMPORTANT: mettre à self.color + 1 pour pouvoir mélanger le tableau.
-        //self.pieces.fill(Piece::from_max_color(self.max_color + 1));
+        self.pieces.fill(piece::from_max_color(self.max_color + 1));
 
         for _i in 0..self.cote {
             for _j in 0..self.cote {
@@ -151,6 +160,7 @@ impl plateau {
             let mut top = String::new();
             let mut mid = String::new();
             let mut bot = String::new();
+
             for j in 0..self.cote {
                 let p : &piece = self.get_at(i as i8, j as i8);
                 top += &*format!(" {} ", p.n);
