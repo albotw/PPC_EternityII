@@ -2,17 +2,18 @@ mod Piece;
 mod Plateau;
 
 use std::{thread, time};
+use std::fmt::{Display, Formatter};
 use rand::Rng;
 use crate::Plateau::plateau;
 
 fn main() {
-    let mut plateau = plateau::new(5, 3);
+    let mut plateau = plateau::new(3, 3);
     plateau.generate();
-    plateau.print_tab();
-    plateau.shuffle(false);
     plateau.print_tab();
     let conflicts = plateau.check_conflicts();
     println!("Found {conflicts} conflicts in array");
+    plateau.shuffle(false);
+    plateau.print_tab();
     RLS(plateau);
 }
 
@@ -25,7 +26,7 @@ fn RLS(mut plateau: plateau) {
         println!("##### CYCLE {i} #####");
         println!("{conflicts} conflicts remaining");
         let rand_move = get_random_move(&plateau, false);
-        println!("[RLS] move generated: {}", rand_move.move_type);
+        println!("[RLS] move generated: {}", rand_move);
         let mut clone = plateau.clone();
         apply_random_move(&mut clone, rand_move);
         let c_cost = get_cost(&plateau);
@@ -56,6 +57,12 @@ struct rls_move {
     x2 : Option<u8>,
     y2: Option<u8>,
     move_type: bool, // true -> rotation, false -> swap
+}
+
+impl Display for rls_move {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "type: {}, x: {}, y: {}", self.move_type, self.x, self.y)
+    }
 }
 
 //mode permet d'avoir des swaps.

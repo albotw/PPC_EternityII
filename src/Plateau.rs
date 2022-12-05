@@ -34,11 +34,11 @@ impl plateau {
             for _j in 0..self.cote {
                 let i = _i as i8;
                 let j = _j as i8;
-                let index = self.to1d(i, j);
-                self.pieces[index].n = self.get_face_from_context(i, j - 1, 'N');
-                self.pieces[index].s = self.get_face_from_context(i, j + 1, 'S');
-                self.pieces[index].e = self.get_face_from_context(i - 1, j, 'E');
-                self.pieces[index].w = self.get_face_from_context(i + 1, j, 'W');
+                let index = self.to1d(j, i);
+                self.pieces[index].n = self.get_face_from_context(j, i - 1, 'N');
+                self.pieces[index].s = self.get_face_from_context(j, i + 1, 'S');
+                self.pieces[index].e = self.get_face_from_context(j + 1, i, 'E');
+                self.pieces[index].w = self.get_face_from_context(j - 1, i, 'W');
             }
         }
     }
@@ -110,21 +110,22 @@ impl plateau {
     }
 
     pub fn to1d(&self, mut x : i8, mut y : i8) -> usize {
-        let bound = (self.cote - 1) as i8;
+        let bound = (self.cote -1 ) as i8;
         if x < 0 {
             x = bound;
         }
-        if x > bound {
+        else if x > bound {
             x = 0;
         }
         if y < 0 {
             y = bound;
         }
-        if y > bound {
+        else if y > bound {
             y = 0;
         }
 
-        let u8_position : u8 =  (x + (bound * y)) as u8;
+        let u8_position : u8 =  (x + (self.cote as i8 * y)) as u8;
+        //println!("x: {x}, y: {y}, to1d: {u8_position}");
         return usize::from(u8_position);
     }
 
@@ -150,9 +151,9 @@ impl plateau {
 
         if out == self.max_color + 1 {
             let mut rng = rand::thread_rng();
-            out = rng.gen_range(0..(self.max_color + 1));
+            out = rng.gen_range(0..=self.max_color);
         }
-        println!("{}", out);
+        //println!("{}", out);
         return out;
     }
 
@@ -163,7 +164,7 @@ impl plateau {
             let mut bot = String::new();
 
             for j in 0..self.cote {
-                let p : &piece = self.get_at(i as i8, j as i8);
+                let p : &piece = self.get_at(j as i8, i as i8);
                 top += &*format!(" {} ", p.n);
                 mid += &*format!("{}#{}", p.w, p.e);
                 bot += &*format!(" {} ", p.s);
