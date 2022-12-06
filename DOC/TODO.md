@@ -15,3 +15,8 @@
     [ ] Température
 [ ] Génération des configurations
 [ ] Optimisation
+
+## TODO (optimisations)
+
+[ ] Calculer le cout pour le mouvement et pas pour la table
+[ ] faire un système de rollback à la place d'un clone

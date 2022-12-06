@@ -1,3 +1,4 @@
+use std::thread::current;
 use rand::Rng;
 use crate::Piece::piece;
 
@@ -102,6 +103,54 @@ impl plateau {
         }
 
         return conflicts / 2;
+    }
+
+    pub fn get_max_proximity(&self) -> u8 {
+        (self.cote * self.cote * 4) / 2
+    }
+
+    pub fn check_proximity(&self) -> u8 {
+        let mut proximity = 0;
+        for _i in 0..self.cote {
+            for _j in 0..self.cote {
+                let i = _i as i8;
+                let j = _j as i8;
+                let current_piece : &piece = self.get_at(j, i);
+
+                let north_neighbor : &piece = self.get_at(j, i - 1);
+                let west_neighbor : &piece = self.get_at(j - 1, i);
+                let east_neighbor : &piece = self.get_at(j + 1, i);
+                let south_neighbor : &piece = self.get_at(j, i + 1);
+
+                if north_neighbor.n == current_piece.n
+                    || north_neighbor.e == current_piece.n
+                    || north_neighbor.s == current_piece.n
+                    || north_neighbor.w == current_piece.n {
+                    proximity += 1;
+                }
+                if west_neighbor.n == current_piece.w
+                    || west_neighbor.e == current_piece.w
+                    || west_neighbor.s == current_piece.w
+                    || west_neighbor.w == current_piece.w {
+                    proximity += 1;
+                }
+                if east_neighbor.n == current_piece.e
+                    || east_neighbor.s == current_piece.e
+                    || east_neighbor.e == current_piece.e
+                    || east_neighbor.w == current_piece.e {
+                    proximity += 1;
+                }
+
+                if south_neighbor.n == current_piece.s
+                    || south_neighbor.s == current_piece.s
+                    || south_neighbor.e == current_piece.s
+                    || south_neighbor.w == current_piece.s {
+                    proximity += 1;
+                }
+            }
+        }
+
+        return proximity / 2;
     }
 
     pub fn get_at(&self, x: i8, y: i8) -> &piece {
